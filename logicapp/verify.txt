@@ -1,0 +1,136 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "sessionId": {
+                                "type": "string"
+                            },
+                            "inputCode": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "actions": {
+            "Get_entities_(V2)": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuretables-1']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent('VerificationCodes')}/entities",
+                    "queries": {
+                        "$filter": "PartitionKey eq 'Verification' and RowKey eq '@{triggerBody()?['sessionId']}'"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Condition": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@string(triggerBody()?['inputCode'])",
+                                "@string(body('Get_entities_(V2)')?['value'][0]['code'])"
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Response": {
+                        "type": "Response",
+                        "kind": "Http",
+                        "inputs": {
+                            "statusCode": 200,
+                            "body": {
+                                "success": true,
+                                "message": "Verification successful!"
+                            }
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {
+                        "Response_1": {
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "statusCode": 200,
+                                "body": {
+                                    "success": false,
+                                    "message": "Invalid code or code expired. Please try again."
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Compose": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Compose": {
+                "type": "Compose",
+                "inputs": {
+                    "inputs": "@body('Get_entities_(V2)')"
+                },
+                "runAfter": {
+                    "Get_entities_(V2)": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Delete_Entity_(V2)": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuretables-1']['connectionId']"
+                        }
+                    },
+                    "method": "delete",
+                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent('VerificationCodes')}/entities/etag(PartitionKey='@{encodeURIComponent('Verification')}',RowKey='@{encodeURIComponent(triggerBody()?['sessionId'])}')"
+                },
+                "runAfter": {
+                    "Condition": [
+                        "Succeeded"
+                    ]
+                }
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "azuretables-1": {
+                    "id": "/subscriptions/4cf71725-32df-498f-93c8-dfe293a875ce/providers/Microsoft.Web/locations/southeastasia/managedApis/azuretables",
+                    "connectionId": "/subscriptions/4cf71725-32df-498f-93c8-dfe293a875ce/resourceGroups/Atlantic_Ocean/providers/Microsoft.Web/connections/azuretables-1",
+                    "connectionName": "azuretables-1"
+                }
+            }
+        }
+    }
+}

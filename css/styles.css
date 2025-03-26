@@ -1,0 +1,110 @@
+/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #E0E0E0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Container for the form */
+.container {
+    background-color: #1F1F1F;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Title of the form */
+.form-title {
+    text-align: center;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+    font-size: x-large;
+    font-weight: bold;
+}
+
+.form-description{
+    text-align: center;
+    color: #B0B0B0;
+    margin-bottom: 20px;
+    font-size: medium;
+}
+
+/* General form styling */
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Form row to wrap input fields */
+.form-row {
+    width: 100%;
+}
+
+/* Label for email input */
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: #B0B0B0;
+}
+
+/* Input field for email */
+.input {
+    padding: 12px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    background-color: #2A2A2A;
+    color: #E0E0E0;
+    font-size: 16px;
+    margin-bottom: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Submit button styling */
+.submit-btn {
+    padding: 12px;
+    font-weight: bold;
+    background-color: #6200EE;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.submit-btn:hover {
+    background-color: #3700B3;
+}
+
+/* Adding a responsive design for smaller screens */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    .form-title {
+        font-size: 18px;
+    }
+
+    .input-email,
+    .submit-btn {
+        font-size: 14px;
+    }
+}

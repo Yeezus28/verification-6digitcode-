@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form-title">Enter Your Email Address</div>
+        <form class="form" onsubmit="handleFormSubmit(event)">
+                <input class="input-email input" type="email" id="email" name="email" required placeholder="Enter your email address">
+                <input class="submit-btn input" type="submit" value="Send Verification Code">
+        </form>
+    </div>
+
+    <script>
+function handleFormSubmit(event) {
+    event.preventDefault();  
+
+    var email = document.getElementById('email').value;
+    var data = { email: email };
+
+    fetch('https://prod-93.southeastasia.logic.azure.com:443/workflows/6000481941034992b976725639fef2ef/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=03pSi22NORDl8eEgN3OdDqVZ-yMD1xpB2fOHzSPbBfY', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.sessionId) {
+            // Store code and sessionId temporarily in localStorage
+            localStorage.setItem('sessionId', result.sessionId);
+            localStorage.setItem('email', email);
+
+            // Redirect to verify page
+            window.location.href = "html/verify.html";
+        } else {
+            alert("Failed to send verification code.");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+    });
+}
+</script>
+</body>
+</html>

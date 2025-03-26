@@ -1,0 +1,123 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "actions": {
+            "Generate_6_digit_code": {
+                "type": "Compose",
+                "inputs": "@string(rand(100000,999999))",
+                "runAfter": {}
+            },
+            "Generate_Unique_ID": {
+                "type": "Compose",
+                "inputs": "@guid()",
+                "runAfter": {
+                    "Generate_6_digit_code": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Send_an_email": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "body": {
+                        "To": "@triggerBody()?['email']",
+                        "Subject": "Verification Code!",
+                        "Body": "<h2 class=\"editor-heading-h2\">Assalamualaikum!</h2><h3 class=\"editor-heading-h3\">Thank you brother! Here is your code<br><br>@{outputs('Generate_6_digit_code')}</h3><p class=\"editor-paragraph\"><i><b><strong class=\"editor-text-bold editor-text-italic\">Bismillah</strong></b></i></p>",
+                        "Importance": "Normal"
+                    },
+                    "path": "/v2/Mail"
+                },
+                "runAfter": {
+                    "Save_SessionId_and_Code": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Send_response": {
+                "type": "Response",
+                "kind": "Http",
+                "inputs": {
+                    "statusCode": 200,
+                    "body": {
+                        "sessionId": "@outputs('Generate_Unique_ID')"
+                    }
+                },
+                "runAfter": {
+                    "Send_an_email": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Save_SessionId_and_Code": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuretables']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "body": {
+                        "PartitionKey": "Verification",
+                        "RowKey": "@outputs('Generate_Unique_ID')",
+                        "email": "@triggerBody()?['email']",
+                        "code": "@outputs('Generate_6_digit_code')",
+                        "expiresAt": "@addSeconds(utcNow(), 300)"
+                    },
+                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent('VerificationCodes')}/entities"
+                },
+                "runAfter": {
+                    "Generate_Unique_ID": [
+                        "Succeeded"
+                    ]
+                }
+            }
+        },
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "office365": {
+                    "id": "/subscriptions/4cf71725-32df-498f-93c8-dfe293a875ce/providers/Microsoft.Web/locations/southeastasia/managedApis/office365",
+                    "connectionId": "/subscriptions/4cf71725-32df-498f-93c8-dfe293a875ce/resourceGroups/Atlantic_Ocean/providers/Microsoft.Web/connections/office365",
+                    "connectionName": "office365"
+                },
+                "azuretables": {
+                    "id": "/subscriptions/4cf71725-32df-498f-93c8-dfe293a875ce/providers/Microsoft.Web/locations/southeastasia/managedApis/azuretables",
+                    "connectionId": "/subscriptions/4cf71725-32df-498f-93c8-dfe293a875ce/resourceGroups/Atlantic_Ocean/providers/Microsoft.Web/connections/azuretables-1",
+                    "connectionName": "azuretables-1"
+                }
+            }
+        }
+    }
+}

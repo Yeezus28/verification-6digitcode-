@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/verify.css" />
+    <title>Verification</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="form-title">Verification</div>
+        <div class="form-description">
+            Enter the 6-digit code sent to <span id="useremail">your@email.com</span>
+        </div>
+        <form class="form" id="verificationForm">
+            <div class="input-group">
+                <input type="text" class="inputcode" id="first_digit" maxlength="1" inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="one-time-code" required />
+                <input type="text" class="inputcode" id="second_digit" maxlength="1" inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="one-time-code" required />
+                <input type="text" class="inputcode" id="third_digit" maxlength="1" inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="one-time-code" required />
+                <input type="text" class="inputcode" id="fourth_digit" maxlength="1" inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="one-time-code" required />
+                <input type="text" class="inputcode" id="fifth_digit" maxlength="1" inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="one-time-code" required />
+                <input type="text" class="inputcode" id="sixth_digit" maxlength="1" inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="one-time-code" required />
+            </div>
+            <input type="submit" class="submit-btn" value="Verify" />
+        </form>
+    </div>
+
+    <script>
+        const inputs = document.querySelectorAll('.inputcode');
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', function () {
+                if (this.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+
+            input.addEventListener('paste', function (e) {
+                const pastedData = e.clipboardData.getData('text');
+                if (/^\d{6}$/.test(pastedData)) {
+                    pastedData.split('').forEach((char, i) => {
+                        if (inputs[i]) {
+                            inputs[i].value = char;
+                        }
+                    });
+                    inputs[5].focus(); // Focus last input
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Show email
+        const email = localStorage.getItem('email') || "your@email.com";
+        document.getElementById('useremail').innerText = email;
+
+        document.getElementById('verificationForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            code = document.getElementById("first_digit").value + document.getElementById("second_digit").value + document.getElementById("third_digit").value + document.getElementById("fourth_digit").value + document.getElementById("fifth_digit").value + document.getElementById("sixth_digit").value;
+
+            if (!/^\d{6}$/.test(code)) {
+                alert('Please enter a valid 6-digit code.');
+                return;
+            }
+
+            const sessionId = localStorage.getItem('sessionId');
+            const data = {
+                sessionId: sessionId,
+                inputCode: code
+            };
+
+            if (!sessionId) {
+                alert("Session ID missing. Please restart the process.");
+                return;
+            }
+
+            fetch('https://prod-17.southeastasia.logic.azure.com:443/workflows/f185e608748a4c3c91f76dcf41a13ac2/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=mnKJxjbmDOJE67YbvJ_y4aJrLq6cjOc3nrUxGAsJAF8', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result);
+
+                    if (result.success === true) {
+                        alert(result.message);
+                        window.location.href = 'success.html';
+                    } else {
+                        alert(result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred. Please try again.");
+                });
+        });
+    </script>
+</body>
+
+</html>

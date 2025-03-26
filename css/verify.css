@@ -1,0 +1,23 @@
+.input-group{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin-bottom: 24px;
+}
+
+.inputcode{
+    width: 3rem;;
+    height: 4rem;
+    border: none;
+    background: transparent;
+    font-size: 3rem;
+    text-align: center;
+    font-weight: bold;
+    color: #E0E0E0;
+    box-shadow: 0 4px 0px rgba(176,176,176);
+}
+
+.inputcode:focus{
+    outline: none;
+}
